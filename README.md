@@ -1,2 +1,18 @@
-# league_predictor
-A machine learning model that predicts the expected gold and exp difference at 10 mins given the lane matchup.
+Credits to Canisback for:                                                           
+League of Legends match dataset: https://canisback.com/matchId/matchlist_na1.json                                                             
+League of Legends roleml model: https://github.com/Canisback/roleML
+
+# Motives behind this project
+For competitive games like League of Legends, people constantly look for information on whether or not they are at a disadvantage even before the game starts. I am no exception, as I find myself analyzing my strengths and weaknesses in a matchup. Despite my many years of knowledge on the game, it is impossible for me to quantify exactly how much I will win by or how much I will lose by. Therefore, I developed models that output values that can be used to determine a person's advantage indepdent of player skill.
+
+# Collecting the data
+Before collecting the data, it is necessary to get an API key on Riot's developer site to make calls to their API. Using riotwatcher on Python, it becomes possible to extract data from matches based on match id. Fortunately, I did not need to go through different users to get match id's as there is already a json provided by Canisback which has thousands of match ids to extract from. In my dataset, there are five roles (top, jungle, mid, adc, support) and each role has an ally and opponent, represented by 1 and 2 respectively. For each player, the data that I chose to use is: champion, summoner spells, keystone, amount of gold at 10 minutes, and amount of exp in 10 minutes. In particular, the exp and gold is my target of interest as we can use that to get the gold and exp difference at 10 minutes, which serves as a pretty good indicator for whether or not someone is losing. 
+
+# Why at the 10 Minute Mark?
+For starters, there are 10 players in each game, and the League of Legends character roster is 154. Using combinatorics, it becomes very clear that there are way too many combinations, and it won't be accurately represented with a small dataset like this. Furthermore, there are many in-game influences that can create an advantage for one team over another. If I were to design a model around everything, then the model will become way too complex. Instead, I opted to predict lane matchups instead because the laning phase is mostly isolated, reducing the outside influence from others. 
+
+# Preprocessing the data
+Before I even start building the model, I need to make it usable through cleaning and manipulation. For each role, I made a subset that contains information regarding that role only with the except of the AD and support role. Because AD and support lane together, I decided to train the model using both of them together to get a more accurate read on how the lane will end up. Lastly, I added two new columns to each subset which is the gold difference and exp difference.
+
+# Building and Validating the Model
+So far, I am only familiar with Decision Trees and Random Forests, so I will only be comparing those two to see which model to use. Using scikit's train_test_split, I calculated the mean squared error for every model. In all my models, the decision tree's MSE was signficiantly worse, so I decided to use random forest regressors only. Now that I have decided which model to use, I needed to find the right parameters. To do this, I made use of scikit-learn's SearchGridCV which allows you to input multiple values for each parameter and the model will compare every combination to see which model has the best results. However, SearchGridCV does take a long time if there are a lot of parameters. Despite the long time it takes to evaluate everything, tuning my parameters increased model performance by a sizable amount for most. Lastly, I cross-validated each model as another form of validation.
